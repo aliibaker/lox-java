@@ -10,6 +10,9 @@ import java.util.List;
 
 // Our programming language
 public class Lox {
+    // Flag that tracks if we encountered an error
+    static boolean hadError = false; 
+
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
             System.out.println("Usage: jlox [script]");
@@ -25,6 +28,8 @@ public class Lox {
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
+
+        if(hadError) System.exit(65);
     }
 
     // When we want to run it interactively and interpret
@@ -39,7 +44,11 @@ public class Lox {
             String line = reader.readLine();
             // If reaches EOF, or hit CTRL + D
             if (line == null) break;
-            run(line)
+            run(line);
+            // Rest when user makes an error in this mode
+            // Want them to keep writing code even if things
+            // didn't work.
+            hadError = false;
         }
     }
 
@@ -53,6 +62,9 @@ public class Lox {
         }
     }
 
+    // We don't have the error reporter in the scanner
+    // because it's general good practice to seperate 
+    // the error reporter from what causes errors. 
     static void error(int line, String message) {
         report(line, "", message);
     }
