@@ -83,8 +83,9 @@ class Scanner {
           // Peek the next character until you hit the next line or EOF.
           // This means the comment is over. 
           while(peek() != '\n' && !isAtEnd()) advance();
-        }
-        else {
+        } else if (match('*')) {
+          cStyleComment();
+        } else {
           addToken(SLASH);
         }
         break;
@@ -106,7 +107,7 @@ class Scanner {
         if(isDigit(c)){
           number();
         } else if(isAlpha(c)) {
-
+          identifier();
         } else {
           Lox.error(line, "Unexpected character.");
         }
@@ -141,7 +142,7 @@ class Scanner {
   }
 
   private void string() {
-    while(peek() != '"' && isAtEnd()){
+    while(peek() != '"' && !isAtEnd()){
       // for multi line strings
       if (peek() == '\n') line++;
       advance();
@@ -156,6 +157,21 @@ class Scanner {
     // Minus one and plus one to remove the ""
     String value = source.substring(start + 1, current - 1);
     addToken(STRING, value);
+  }
+
+  private void cStyleComment() {
+    while(peek() != '*' && peekNext() != '/' && !isAtEnd()) {
+      if(peek() == '\n') line++;
+      advance();
+    }
+
+    if(isAtEnd()) {
+      Lox.error(line, "Unterminated comment");
+      return;
+    }
+
+    advance();
+    advance();
   }
 
   private boolean match(char expected) {
@@ -199,7 +215,7 @@ class Scanner {
 
   private boolean isAlpha(char c) { 
     return  (c >= 'a' && c <= 'z') || 
-            (c >= 'A' || c <= 'Z') || 
+            (c >= 'A' && c <= 'Z') || 
              c == '-';
   }
 
